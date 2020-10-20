@@ -4,7 +4,7 @@ import math
 import wave
 import struct
 import matplotlib.pyplot as plt
-import WavesLib
+import WavesLib, WaveAnalyser
 
 
 # Audio will contain a long list of samples (i.e. floating point numbers describing the
@@ -65,10 +65,28 @@ def save_wav(file_name):
 
     return
 
+
+
 append_sinewave()
-append_sinewave(freq=220.0)
+append_sinewave()
 
 save_wav("output.wav")
 
+an = WaveAnalyser.Analyser()
+an.Load("output.wav")
+an.GetWaves()
+
+nW = []
+for i in range(int(sample_rate)):
+	nW += [WavesLib.ValueAtTime(0, an.w1[1], i/sample_rate)]
+
+diff = []
+for i in range(int(sample_rate)):
+	if nW[i] == 0 or audio[i] == 0:
+		diff += [0]
+	else:
+		diff += [audio[i]/nW[i]]
+
 plt.plot(audio)
+plt.plot(nW)
 plt.show()
