@@ -1,10 +1,7 @@
 #!/usr/bin/python 
 # based on : www.daniweb.com/code/snippet263775.html
-import math
-import wave
-import struct
+import numpy as np
 import matplotlib.pyplot as plt
-import WavesLib, WaveAnalyser
 
 
 # Audio will contain a long list of samples (i.e. floating point numbers describing the
@@ -14,79 +11,27 @@ import WavesLib, WaveAnalyser
 audio = []
 sample_rate = 44100.0
 
+n = 40
+# definition du signal
+dt = 0.1
+T1 = 2
+T2 = 5
+t = np.arange(0, T1*T2, dt)
+signal = 2*np.cos(2*np.pi/T1*t) + np.sin(2*np.pi/T2*t)
 
-def append_silence(duration_milliseconds=500):
-    num_samples = duration_milliseconds * (sample_rate / 1000.0)
+# affichage du signal
+plt.subplot(211)
+plt.plot(t,signal)
 
-    for x in range(int(num_samples)): 
-        audio.append(0.0)
+# calcul de la transformee de Fourier et des frequences
+fourier = np.fft.fft(signal)
+n = signal.size
+freq = np.fft.fftfreq(n, d=dt)
 
-    return
+# affichage de la transformee de Fourier
+plt.subplot(212)
+plt.plot(freq, fourier.real, label="real")
+plt.plot(freq, fourier.imag, label="imag")
+plt.legend()
 
-
-def append_sinewave(freq=440.0, duration_milliseconds=500, volume=1.0):
-
-    global audio # using global variables isn't cool.
-
-    num_samples = duration_milliseconds * (sample_rate / 1000.0)
-
-    for x in range(int(num_samples)):
-        audio.append(WavesLib.MVT(freq * ( x / sample_rate )))
-
-    return
-
-
-def save_wav(file_name):
-    # Open up a wav file
-    wav_file=wave.open(file_name,"w")
-
-    # wav params
-    nchannels = 1
-
-    sampwidth = 2
-
-    # 44100 is the industry standard sample rate - CD quality.  If you need to
-    # save on file size you can adjust it downwards. The stanard for low quality
-    # is 8000 or 8kHz.
-    nframes = len(audio)
-    comptype = "NONE"
-    compname = "not compressed"
-    wav_file.setparams((nchannels, sampwidth, sample_rate, nframes, comptype, compname))
-
-    # WAV files here are using short, 16 bit, signed integers for the 
-    # sample size.  So we multiply the floating point data we have by 32767, the
-    # maximum value for a short integer.  NOTE: It is theortically possible to
-    # use the floating point -1.0 to 1.0 data directly in a WAV file but not
-    # obvious how to do that using the wave module in python.
-    for sample in audio:
-        wav_file.writeframes(struct.pack('h', int( sample * 32767.0 )))
-
-    wav_file.close()
-
-    return
-
-
-
-append_sinewave()
-append_sinewave()
-
-save_wav("output.wav")
-
-an = WaveAnalyser.Analyser()
-an.Load("output.wav")
-an.GetWaves()
-
-nW = []
-for i in range(int(sample_rate)):
-	nW += [WavesLib.ValueAtTime(0, an.w1[1], i/sample_rate)]
-
-diff = []
-for i in range(int(sample_rate)):
-	if nW[i] == 0 or audio[i] == 0:
-		diff += [0]
-	else:
-		diff += [audio[i]/nW[i]]
-
-plt.plot(audio)
-plt.plot(nW)
 plt.show()
